@@ -1,24 +1,17 @@
-#ifndef POWERUP_HPP
-#define POWERUP_HPP
+#pragma once
 
 #include "GameObject.hpp"
 #include "Constants.hpp"
+#include "Player.hpp" // Nötig für applyEffect
 
 class PowerUp : public GameObject {
 public:
-    enum Type { ExtraLife, SpeedBoost };
-    PowerUp(float x, float y, Type type);
+    // Konstruktor, der die Startposition festlegt
+    PowerUp(float startX, float startY);
 
     // Bewegt das Power-Up nach unten
-    void move();
+    void update(float deltaTime);
 
-    // Getter für die Position
-    sf::Vector2f getPosition() const override;
-    // Getter für die Bounding Box
-    sf::FloatRect getBounds() const override;
-
-    sf::CircleShape shape;
-    Type type;
+    // Wendet den Effekt auf den Spieler an (Beispiel)
+    void applyEffect(Player& player);
 };
-
-#endif //POWERUP_HPP

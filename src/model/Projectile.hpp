@@ -1,27 +1,17 @@
-#ifndef PROJECTILE_HPP
-#define PROJECTILE_HPP
+#pragma once
 
 #include "GameObject.hpp"
 #include "Constants.hpp"
 
 class Projectile : public GameObject {
 public:
-    enum Type { PlayerShot, AlienShot };
-    Projectile(float x, float y, Type type);
+    // Konstruktor, der Startposition und Richtung entgegennimmt
+    Projectile(float startX, float startY, float dirX, float dirY);
 
-    // Bewegt das Geschoss
-    void move();
-
-    // Getter für die Position
-    sf::Vector2f getPosition() const override;
-    // Getter für die Bounding Box
-    sf::FloatRect getBounds() const override;
-
-    sf::RectangleShape shape;
-    Type type;
+    // Update-Methode für die Bewegung des Geschosses
+    void update(float deltaTime);
 
 private:
-    float speed = Constants::PROJECTILE_SPEED;
+    // Richtung, in die sich das Geschoss bewegt
+    sf::Vector2f direction;
 };
-
-#endif //PROJECTILE_HPP

@@ -1,118 +1,103 @@
 #include "Game.hpp"
-#include <cstdlib>
-#include <ctime>
-#include <algorithm>
+#include "../model/Constants.hpp"
 
-Game::Game() : alienDirection(Constants::ALIEN_SPEED, 0.f) {
-    spawnAliens();
-    srand(time(nullptr));
-}
-
-void Game::spawnAliens() {
-    aliens.clear();
+Game::Game() : player(), alienDirection(1.0f) {
     for (int i = 0; i < 5; ++i) {
-        for (int j = 0; j < 10; ++j) {
-            aliens.emplace_back(j * 60.f + 50.f, i * 50.f + 50.f);
+        for (int j = 0; j < 11; ++j) {
+            aliens.emplace_back(100.0f + j * 60.0f, 50.0f + i * 40.0f);
         }
     }
 }
 
 void Game::run() {
+    sf::Clock clock;
     while (view.getWindow().isOpen()) {
+        float deltaTime = clock.restart().asSeconds();
         processEvents();
-        update();
+        update(deltaTime);
         render();
     }
 }
 
 void Game::processEvents() {
-    sf::Event event{};
-    while (view.getWindow().pollEvent(event)) {
-        switch (event.type) {
-            case sf::Event::KeyPressed:
-                handlePlayerInput(event.key.code, true);
-                break;
-            case sf::Event::KeyReleased:
-                handlePlayerInput(event.key.code, false);
-                break;
-            case sf::Event::Closed:
-                view.getWindow().close();
-                break;
-            default:
-                break;
+    for (auto event = view.getWindow().pollEvent(); event; event = view.getWindow().pollEvent())
+    {
+        // Wir prüfen den Typ des Events mit der 'is'-Methode
+        if (event->is<sf::Event::Closed>()) {
+            view.getWindow().close();
+        }
+        // Wenn das Event ein 'KeyPressed' ist, holen wir uns die Daten dazu
+        else if (const auto* keyPressed = event->get<sf::Event::KeyPressed>()) {
+            handlePlayerInput(keyPressed->code, true);
+        }
+        // Wenn das Event ein 'KeyReleased' ist, holen wir uns die Daten dazu
+        else if (const auto* keyReleased = event->get<sf::Event::KeyReleased>()) {
+            handlePlayerInput(keyReleased->code, false);
         }
     }
 }
 
 void Game::handlePlayerInput(sf::Keyboard::Key key, bool isPressed) {
-    if (key == sf::Keyboard::Left)
-        isMovingLeft = isPressed;
-    if (key == sf::Keyboard::Right)
-        isMovingRight = isPressed;
-    if (key == sf::Keyboard::Space && isPressed) {
-        if (shootClock.getElapsedTime().asSeconds() > 0.5f) {
-            projectiles.emplace_back(player.getPosition().x + 22.f, player.getPosition().y, Projectile::PlayerShot);
-            shootClock.restart();
-        }
+    // Tastencodes sind jetzt in einem Key-Enum
+    if (key == sf::Keyboard::Key::Left) {
+        player.isMovingLeft = isPressed;
+    } else if (key == sf::Keyboard::Key::Right) {
+        player.isMovingRight = isPressed;
+    } else if (key == sf::Keyboard::Key::Space && isPressed) {
+        const auto& playerShape = player.getShape();
+        projectiles.emplace_back(playerShape.getPosition().x, playerShape.getPosition().y, 0.f, -1.f);
     }
 }
 
-void Game::update() {
-    if (isMovingLeft) player.moveLeft();
-    if (isMovingRight) player.moveRight();
+void Game::update(float deltaTime) {
+    player.update(deltaTime);
 
-    // Alien Bewegung
     bool changeDirection = false;
-    for (const auto& alien : aliens) {
-        if (!alien.isActive) continue;
-        if ((alien.getPosition().x <= 0 && alienDirection.x < 0) || (alien.getPosition().x >= Constants::WINDOW_WIDTH - 40 && alienDirection.x > 0)) {
-            changeDirection = true;
-            break;
+    for (auto& alien : aliens) {
+        if (alien.isActive) {
+            alien.move(alienDirection * Constants::ALIEN_SPEED * deltaTime, 0);
+            const auto& alienShape = alien.getShape();
+            if (alienShape.getPosition().x < alienShape.getSize().x / 2.f ||
+                alienShape.getPosition().x > Constants::WINDOW_WIDTH - alienShape.getSize().x / 2.f) {
+                changeDirection = true;
+            }
         }
     }
 
     if (changeDirection) {
-        alienDirection.x *= -1;
+        alienDirection *= -1.0f;
         for (auto& alien : aliens) {
-            alien.move(0, 40.f);
-        }
-    } else {
-        for (auto& alien : aliens) {
-            alien.move(alienDirection.x, 0);
+            alien.move(0, 20.0f);
         }
     }
 
-    // Geschosse bewegen und Kollisionen prüfen
     for (auto& projectile : projectiles) {
-        projectile.move();
-        if (projectile.type == Projectile::PlayerShot) {
-            for (auto& alien : aliens) {
-                if (alien.isActive && projectile.getBounds().intersects(alien.getBounds())) {
-                    alien.isActive = false;
-                    projectile.isActive = false;
-                    if (rand() % 10 == 0) {
-                        powerUps.emplace_back(alien.getPosition().x, alien.getPosition().y, PowerUp::ExtraLife);
-                    }
-                    break;
-                }
+        projectile.update(deltaTime);
+    }
+
+    for(auto& powerUp : powerUps){
+        powerUp.update(deltaTime);
+    }
+
+    checkCollisions();
+}
+
+void Game::checkCollisions() {
+    for (auto& projectile : projectiles) {
+        for (auto& alien : aliens) {
+            if (projectile.isActive && alien.isActive && projectile.getBounds().findIntersection(alien.getBounds())) {
+                projectile.isActive = false;
+                alien.isActive = false;
             }
         }
     }
 
-    // Power-Ups bewegen und Kollisionen prüfen
     for (auto& powerUp : powerUps) {
-        powerUp.move();
-        if (powerUp.getBounds().intersects(player.getBounds())) {
-            if (powerUp.type == PowerUp::ExtraLife) {
-                player.lives++;
-            }
+        if (powerUp.isActive && powerUp.getBounds().findIntersection(player.getBounds())) {
             powerUp.isActive = false;
+            powerUp.applyEffect(player);
         }
     }
-
-    // Inaktive Objekte entfernen
-    projectiles.erase(std::remove_if(projectiles.begin(), projectiles.end(), [](const Projectile& p) { return !p.isActive || p.getPosition().y < 0 || p.getPosition().y > Constants::WINDOW_HEIGHT; }), projectiles.end());
-    powerUps.erase(std::remove_if(powerUps.begin(), powerUps.end(), [](const PowerUp& p) { return !p.isActive; }), powerUps.end());
 }
 
 void Game::render() {

@@ -1,19 +1,23 @@
-#ifndef GAMEOBJECT_HPP
-#define GAMEOBJECT_HPP
+#pragma once
 
 #include <SFML/Graphics.hpp>
 
 class GameObject {
 public:
-    // Virtueller Destruktor für Basisklassen
     virtual ~GameObject() = default;
 
-    // Getter für die Position
-    virtual sf::Vector2f getPosition() const = 0;
-    // Getter für die Bounding Box (für Kollisionen)
-    virtual sf::FloatRect getBounds() const = 0;
+    bool isActive = true;
 
-    bool isActive = true; // Ist das Objekt aktiv im Spiel?
+    virtual sf::FloatRect getBounds() const {
+        return shape.getGlobalBounds();
+    }
+
+    // Diese öffentliche Methode gibt eine Referenz auf das shape-Objekt zurück,
+    // damit die GameView es zeichnen kann, ohne direkt darauf zuzugreifen.
+    const sf::RectangleShape& getShape() const {
+        return shape;
+    }
+
+protected:
+    sf::RectangleShape shape;
 };
-
-#endif //GAMEOBJECT_HPP

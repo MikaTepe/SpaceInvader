@@ -1,7 +1,7 @@
 #include "GameView.hpp"
 #include "../model/Constants.hpp"
 
-GameView::GameView() : window(sf::VideoMode(Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT), "Space Invaders") {
+GameView::GameView() : window(sf::VideoMode({Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT}), "Space Invaders") {
     window.setFramerateLimit(60);
 }
 
@@ -13,23 +13,22 @@ void GameView::draw(const Player& player, const std::vector<Alien>& aliens, cons
     window.clear();
 
     // Zeichne Spieler
-    window.draw(player.shape);
+    window.draw(player.getShape());
 
     // Zeichne Aliens
     for (const auto& alien : aliens) {
-        if(alien.isActive) window.draw(alien.shape);
+        if(alien.isActive) window.draw(alien.getShape());
     }
 
     // Zeichne Geschosse
     for (const auto& projectile : projectiles) {
-        if(projectile.isActive) window.draw(projectile.shape);
+        if(projectile.isActive) window.draw(projectile.getShape());
     }
 
     // Zeichne Power-Ups
     for (const auto& powerUp : powerUps) {
-        if(powerUp.isActive) window.draw(powerUp.shape);
+        if(powerUp.isActive) window.draw(powerUp.getShape());
     }
-
 
     window.display();
 }

@@ -1,13 +1,12 @@
-#ifndef GAME_HPP
-#define GAME_HPP
+#pragma once
 
 #include <vector>
-#include <SFML/System/Clock.hpp>
+#include <SFML/Graphics.hpp>
+#include "../view/GameView.hpp"
 #include "../model/Player.hpp"
 #include "../model/Alien.hpp"
 #include "../model/Projectile.hpp"
 #include "../model/PowerUp.hpp"
-#include "../view/GameView.hpp" // Wichtig: Inkludiert die korrekte GameView-Definition
 
 class Game {
 public:
@@ -16,21 +15,15 @@ public:
 
 private:
     void processEvents();
-    void update();
+    void update(float deltaTime);
     void render();
     void handlePlayerInput(sf::Keyboard::Key key, bool isPressed);
-    void spawnAliens();
+    void checkCollisions();
 
     GameView view;
     Player player;
     std::vector<Alien> aliens;
     std::vector<Projectile> projectiles;
     std::vector<PowerUp> powerUps;
-
-    bool isMovingLeft = false;
-    bool isMovingRight = false;
-    sf::Clock shootClock;
-    sf::Vector2f alienDirection;
+    float alienDirection;
 };
-
-#endif //GAME_HPP

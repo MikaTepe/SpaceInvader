@@ -17,7 +17,7 @@ public:
 
 private:
     sf::RenderWindow window;
-    // Hier könntest du Layer für Hintergründe etc. hinzufügen
+    // Hier Hintergründe etc. hinzufügen
 };
 
 #endif //GAMEVIEW_HPP
