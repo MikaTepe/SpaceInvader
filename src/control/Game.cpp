@@ -1,67 +1,120 @@
 #include "Game.hpp"
+#include <cstdlib>
+#include <ctime>
+#include <algorithm>
 
-#include <SFML/Window/Keyboard.hpp>
-
-#include "../model/Constants.hpp"
-
-Game::Game() : window(sf::VideoMode({constants::VIEW_WIDTH, constants::VIEW_HEIGHT}), "Space Invaders"),
-    view(sf::FloatRect(sf::Vector2f({0,-constants::VIEW_HEIGHT}), sf::Vector2f({constants::VIEW_WIDTH,constants::VIEW_HEIGHT}))),
-    game_layer(window) {
-    // limit frame rate
-    window.setFramerateLimit(constants::FRAME_RATE);
-
-    // set the view (visible area) for our game
-    game_layer.set_view(view);
+Game::Game() : alienDirection(Constants::ALIEN_SPEED, 0.f) {
+    spawnAliens();
+    srand(time(nullptr));
 }
 
-void Game::start() {
-    // The clock is needed to control the speed of movement
-    sf::Clock clock;
-
-    while (window.isOpen()) {
-        // Restart the clock and save the elapsed time into elapsed_time
-        sf::Time elapsed_time = clock.restart();
- 
-        // handle input, check if window is still open
-        if (!input()) {
-            // update the scene according to the passed time
-            update(elapsed_time.asSeconds());
-            // draw the scene
-            draw();
+void Game::spawnAliens() {
+    aliens.clear();
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            aliens.emplace_back(j * 60.f + 50.f, i * 50.f + 50.f);
         }
     }
 }
 
-// returns true, if the window has been closed
-bool Game::input() {
-    while (std::optional<sf::Event> event = window.pollEvent()) {
-        if (event->is<sf::Event::Closed>()) {
-            // quit
-            window.close();
-            return true;
-        }
-        // TODO: Process other events
-        // examples:
-        //if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
-            //if (keyPressed->code == sf::Keyboard::Key::Right) { // right arrow key pressed
-                // ...
-        // if (const auto* keyReleased = event->getIf<sf::Event::KeyReleased>()) {
-            // if (keyReleased->code == sf::Keyboard::Key::Right) { // right arrow released
-                // ...
+void Game::run() {
+    while (view.getWindow().isOpen()) {
+        processEvents();
+        update();
+        render();
     }
-    return false;
 }
 
-void Game::update(float time_passed) {
-    // TODO: update the game objects with the current time stamp
+void Game::processEvents() {
+    sf::Event event{};
+    while (view.getWindow().pollEvent(event)) {
+        switch (event.type) {
+            case sf::Event::KeyPressed:
+                handlePlayerInput(event.key.code, true);
+                break;
+            case sf::Event::KeyReleased:
+                handlePlayerInput(event.key.code, false);
+                break;
+            case sf::Event::Closed:
+                view.getWindow().close();
+                break;
+            default:
+                break;
+        }
+    }
 }
 
-void Game::draw() {
-    window.clear();
+void Game::handlePlayerInput(sf::Keyboard::Key key, bool isPressed) {
+    if (key == sf::Keyboard::Left)
+        isMovingLeft = isPressed;
+    if (key == sf::Keyboard::Right)
+        isMovingRight = isPressed;
+    if (key == sf::Keyboard::Space && isPressed) {
+        if (shootClock.getElapsedTime().asSeconds() > 0.5f) {
+            projectiles.emplace_back(player.getPosition().x + 22.f, player.getPosition().y, Projectile::PlayerShot);
+            shootClock.restart();
+        }
+    }
+}
 
-    game_layer.clear();
-    // TODO: add game elements to layer
-    game_layer.draw();
+void Game::update() {
+    if (isMovingLeft) player.moveLeft();
+    if (isMovingRight) player.moveRight();
 
-    window.display();
+    // Alien Bewegung
+    bool changeDirection = false;
+    for (const auto& alien : aliens) {
+        if (!alien.isActive) continue;
+        if ((alien.getPosition().x <= 0 && alienDirection.x < 0) || (alien.getPosition().x >= Constants::WINDOW_WIDTH - 40 && alienDirection.x > 0)) {
+            changeDirection = true;
+            break;
+        }
+    }
+
+    if (changeDirection) {
+        alienDirection.x *= -1;
+        for (auto& alien : aliens) {
+            alien.move(0, 40.f);
+        }
+    } else {
+        for (auto& alien : aliens) {
+            alien.move(alienDirection.x, 0);
+        }
+    }
+
+    // Geschosse bewegen und Kollisionen prüfen
+    for (auto& projectile : projectiles) {
+        projectile.move();
+        if (projectile.type == Projectile::PlayerShot) {
+            for (auto& alien : aliens) {
+                if (alien.isActive && projectile.getBounds().intersects(alien.getBounds())) {
+                    alien.isActive = false;
+                    projectile.isActive = false;
+                    if (rand() % 10 == 0) {
+                        powerUps.emplace_back(alien.getPosition().x, alien.getPosition().y, PowerUp::ExtraLife);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    // Power-Ups bewegen und Kollisionen prüfen
+    for (auto& powerUp : powerUps) {
+        powerUp.move();
+        if (powerUp.getBounds().intersects(player.getBounds())) {
+            if (powerUp.type == PowerUp::ExtraLife) {
+                player.lives++;
+            }
+            powerUp.isActive = false;
+        }
+    }
+
+    // Inaktive Objekte entfernen
+    projectiles.erase(std::remove_if(projectiles.begin(), projectiles.end(), [](const Projectile& p) { return !p.isActive || p.getPosition().y < 0 || p.getPosition().y > Constants::WINDOW_HEIGHT; }), projectiles.end());
+    powerUps.erase(std::remove_if(powerUps.begin(), powerUps.end(), [](const PowerUp& p) { return !p.isActive; }), powerUps.end());
+}
+
+void Game::render() {
+    view.draw(player, aliens, projectiles, powerUps);
 }

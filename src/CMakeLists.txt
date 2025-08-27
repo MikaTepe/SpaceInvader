@@ -1,5 +1,9 @@
 # Model
 set(ModelSources
+    ${CMAKE_CURRENT_SOURCE_DIR}/model/Player.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/model/Alien.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/model/Projectile.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/model/PowerUp.cpp
     )
 
 # Controller
@@ -10,6 +14,7 @@ set(ControlSources
 # View
 set(ViewSources
     ${CMAKE_CURRENT_SOURCE_DIR}/view/Layer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/view/GameView.cpp
     )
 
 # add src code to target
