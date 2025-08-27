@@ -1,5 +1,3 @@
-// src/model/PowerUp.cpp
-
 #include "PowerUp.hpp"
 
 PowerUp::PowerUp(float startX, float startY) {

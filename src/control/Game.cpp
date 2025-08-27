@@ -1,7 +1,10 @@
 #include "Game.hpp"
 #include "../model/Constants.hpp"
+#include "../view/GameView.hpp"
+#include <SFML/Window/Event.hpp>
 
-Game::Game() : player(), alienDirection(1.0f) {
+Game::Game() : view(), player(), alienDirection(1.0f) {
+    // Initialisiert die Aliens in einem Gitter
     for (int i = 0; i < 5; ++i) {
         for (int j = 0; j < 11; ++j) {
             aliens.emplace_back(100.0f + j * 60.0f, 50.0f + i * 40.0f);
@@ -20,32 +23,30 @@ void Game::run() {
 }
 
 void Game::processEvents() {
-    for (auto event = view.getWindow().pollEvent(); event; event = view.getWindow().pollEvent())
+    // Korrekte Event-Schleife für SFML 3. 'pollEvent' gibt ein std::optional zurück.
+    while (auto event = view.getWindow().pollEvent())
     {
-        // Wir prüfen den Typ des Events mit der 'is'-Methode
+        // Wir prüfen den Typ des Events mit der 'is'-Methode.
         if (event->is<sf::Event::Closed>()) {
             view.getWindow().close();
         }
-        // Wenn das Event ein 'KeyPressed' ist, holen wir uns die Daten dazu
-        else if (const auto* keyPressed = event->get<sf::Event::KeyPressed>()) {
+        else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
             handlePlayerInput(keyPressed->code, true);
         }
-        // Wenn das Event ein 'KeyReleased' ist, holen wir uns die Daten dazu
-        else if (const auto* keyReleased = event->get<sf::Event::KeyReleased>()) {
+        else if (const auto* keyReleased = event->getIf<sf::Event::KeyReleased>()) {
             handlePlayerInput(keyReleased->code, false);
         }
     }
 }
 
 void Game::handlePlayerInput(sf::Keyboard::Key key, bool isPressed) {
-    // Tastencodes sind jetzt in einem Key-Enum
     if (key == sf::Keyboard::Key::Left) {
         player.isMovingLeft = isPressed;
     } else if (key == sf::Keyboard::Key::Right) {
         player.isMovingRight = isPressed;
     } else if (key == sf::Keyboard::Key::Space && isPressed) {
         const auto& playerShape = player.getShape();
-        projectiles.emplace_back(playerShape.getPosition().x, playerShape.getPosition().y, 0.f, -1.f);
+        projectiles.emplace_back(playerShape.getPosition().x, playerShape.getPosition().y, 0.f, -Constants::PROJECTILE_SPEED);
     }
 }
 
@@ -55,10 +56,9 @@ void Game::update(float deltaTime) {
     bool changeDirection = false;
     for (auto& alien : aliens) {
         if (alien.isActive) {
-            alien.move(alienDirection * Constants::ALIEN_SPEED * deltaTime, 0);
-            const auto& alienShape = alien.getShape();
-            if (alienShape.getPosition().x < alienShape.getSize().x / 2.f ||
-                alienShape.getPosition().x > Constants::WINDOW_WIDTH - alienShape.getSize().x / 2.f) {
+            alien.move(alienDirection * Constants::ALIEN_SPEED, 0);
+            const auto& alienBounds = alien.getBounds();
+            if (alienBounds.position.x < 0 || (alienBounds.position.x + alienBounds.size.x) > Constants::WINDOW_WIDTH) {
                 changeDirection = true;
             }
         }
@@ -95,7 +95,6 @@ void Game::checkCollisions() {
     for (auto& powerUp : powerUps) {
         if (powerUp.isActive && powerUp.getBounds().findIntersection(player.getBounds())) {
             powerUp.isActive = false;
-            powerUp.applyEffect(player);
         }
     }
 }
