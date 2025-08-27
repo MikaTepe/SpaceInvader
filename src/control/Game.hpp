@@ -1,29 +1,30 @@
-#pragma once
+#ifndef GAME_HPP
+#define GAME_HPP
 
-#include <vector>
+#include <memory>
 #include <SFML/Graphics.hpp>
-#include "../view/GameView.hpp"
-#include "../model/Player.hpp"
-#include "../model/Alien.hpp"
-#include "../model/Projectile.hpp"
-#include "../model/PowerUp.hpp"
+#include "GameState.hpp"
 
 class Game {
 public:
     Game();
     void run();
 
+    void changeState(std::unique_ptr<GameState> newState);
+    void changeStateToPlaying();
+    void changeStateToGameOver();
+
+    sf::RenderWindow& getWindow();
+    const sf::Font& getFont() const;
+
 private:
     void processEvents();
     void update(float deltaTime);
     void render();
-    void handlePlayerInput(sf::Keyboard::Key key, bool isPressed);
-    void checkCollisions();
 
-    GameView view;
-    Player player;
-    std::vector<Alien> aliens;
-    std::vector<Projectile> projectiles;
-    std::vector<PowerUp> powerUps;
-    float alienDirection;
+    sf::RenderWindow window;
+    std::unique_ptr<GameState> currentState;
+    std::unique_ptr<sf::Font> font;
 };
+
+#endif //GAME_HPP

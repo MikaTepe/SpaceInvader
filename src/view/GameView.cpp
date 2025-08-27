@@ -9,9 +9,8 @@ sf::RenderWindow& GameView::getWindow() {
     return window;
 }
 
+// window.clear() und window.display() werden in der Haupt-Render-Schleife (Game::render) aufgerufen.
 void GameView::draw(const Player& player, const std::vector<Alien>& aliens, const std::vector<Projectile>& projectiles, const std::vector<PowerUp>& powerUps) {
-    window.clear();
-
     // Zeichne Spieler
     window.draw(player.getShape());
 
@@ -29,6 +28,4 @@ void GameView::draw(const Player& player, const std::vector<Alien>& aliens, cons
     for (const auto& powerUp : powerUps) {
         if(powerUp.isActive) window.draw(powerUp.getShape());
     }
-
-    window.display();
 }

@@ -1,0 +1,17 @@
+#ifndef GAMESTATE_HPP
+#define GAMESTATE_HPP
+
+#include <SFML/Graphics.hpp>
+
+class Game;
+
+class GameState {
+public:
+    virtual ~GameState() = default;
+
+    virtual void handleEvents(Game& game) = 0;
+    virtual void update(float deltaTime) = 0;
+    virtual void draw(sf::RenderWindow& window) = 0;
+};
+
+#endif //GAMESTATE_HPP

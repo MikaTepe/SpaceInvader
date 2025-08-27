@@ -1,19 +1,24 @@
 #include "Projectile.hpp"
+#include "Constants.hpp"
 
-// Der Konstruktor nimmt die Startposition (x, y) und die Richtung (dirX, dirY) entgegen
-Projectile::Projectile(float startX, float startY, float dirX, float dirY) : direction(dirX, dirY) {
+// Der Konstruktor setzt jetzt die übergebene Farbe
+Projectile::Projectile(float startX, float startY, float dirX, float dirY, sf::Color color) {
     shape.setSize({5.f, 15.f});
-    shape.setFillColor(sf::Color::Yellow);
-    shape.setOrigin({shape.getSize().x / 2.f, shape.getSize().y / 2.f});
+    shape.setFillColor(color); // Farbe wird hier gesetzt
+    shape.setOrigin(shape.getSize() / 2.f);
     shape.setPosition({startX, startY});
+    direction = {dirX, dirY};
+    speed = Constants::PROJECTILE_SPEED;
 }
 
 void Projectile::update(float deltaTime) {
-    // Bewegt die Form basierend auf Richtung, Geschwindigkeit und der Zeit seit dem letzten Frame
-    sf::Vector2f movement = direction * Constants::PROJECTILE_SPEED;
-    shape.move(movement * deltaTime);
+    shape.move(direction * speed * deltaTime);
+}
 
-    if (shape.getPosition().y < 0 || shape.getPosition().y > Constants::WINDOW_HEIGHT) {
-        isActive = false;
-    }
+const sf::RectangleShape& Projectile::getShape() const {
+    return shape;
+}
+
+sf::FloatRect Projectile::getBounds() const {
+    return shape.getGlobalBounds();
 }

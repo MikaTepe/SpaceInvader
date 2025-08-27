@@ -1,17 +1,21 @@
-#pragma once
+#ifndef PROJECTILE_HPP
+#define PROJECTILE_HPP
 
-#include "GameObject.hpp"
-#include "Constants.hpp"
+#include <SFML/Graphics.hpp>
 
-class Projectile : public GameObject {
+class Projectile {
 public:
-    // Konstruktor, der Startposition und Richtung entgegennimmt
-    Projectile(float startX, float startY, float dirX, float dirY);
-
-    // Update-Methode für die Bewegung des Geschosses
+    // Der Konstruktor akzeptiert jetzt eine Farbe, um Spieler- und Alien-Schüsse zu unterscheiden
+    Projectile(float startX, float startY, float dirX, float dirY, sf::Color color);
     void update(float deltaTime);
+    const sf::RectangleShape& getShape() const;
+    sf::FloatRect getBounds() const;
+    bool isActive = true;
 
 private:
-    // Richtung, in die sich das Geschoss bewegt
+    sf::RectangleShape shape;
     sf::Vector2f direction;
+    float speed;
 };
+
+#endif //PROJECTILE_HPP

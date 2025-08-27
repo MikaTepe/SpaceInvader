@@ -6,16 +6,18 @@ set(ModelSources
     ${CMAKE_CURRENT_SOURCE_DIR}/model/PowerUp.cpp
     )
 
-# Controller
+# Controller (jetzt mit den neuen State-Klassen)
 set(ControlSources
     ${CMAKE_CURRENT_SOURCE_DIR}/control/Game.cpp
-    )
+    ${CMAKE_CURRENT_SOURCE_DIR}/control/StartScreenState.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/control/PlayingState.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/control/GameOverState.cpp
+)
 
-# View
+# View (GameView.cpp wurde entfernt, da es nicht mehr benötigt wird)
 set(ViewSources
     ${CMAKE_CURRENT_SOURCE_DIR}/view/Layer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/view/GameView.cpp
-    )
+)
 
 # add src code to target
 add_executable(SpaceInvaders
