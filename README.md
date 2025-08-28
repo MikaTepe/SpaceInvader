@@ -8,8 +8,9 @@ Bauen und ausführen im JupyterHub:
 
 Features und Bugs
 
-[ ] Wenn Invader/Aliens die Rand des Bildschirms berühren, kann es vorkommen, dass sich die Schleife für das Y-Level loopt und diese Invader "vom Himmel fallen"
-[ ] Game Over Mechanismus, wenn Invader Fenster Unterseite berühren einfügen
-[ ] Texturen aktuell etwas sehr klein, einige Texturen vergrößert (Player Explosion, Player und Projektile)
-[ ] Schilder implementieren
-[ ] Vielleicht PowerUp
+- Wenn Invader/Aliens die Rand des Bildschirms berühren, kann es vorkommen, dass sich die Schleife für das Y-Level loopt und diese Invader "vom Himmel fallen"
+- Game Over Mechanismus, wenn Invader Fenster Unterseite berühren einfügen
+- Texturen aktuell etwas sehr klein, einige Texturen vergrößert (Player Explosion, Player und Projektile)
+- Vielleicht PowerUp, da Vorgabe
+- Schilder implementieren
+- Refactoren und Kommentare!!!
