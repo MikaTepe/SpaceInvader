@@ -5,3 +5,11 @@ Bauen und ausführen im JupyterHub:
 3. Das Projekt und die Tests bauen: `make game` bzw. `make tests`
 4. Den Pfad im Terminal anpassen: `export LD_LIBRARY_PATH=./SFML/lib:$LD_LIBRARY_PATH`
 5. Das Spiel oder die Test ausführen (in der Konsolen-Anwendung, nicht VSCode!): `./game` oder `./tests`
+
+Features und Bugs
+
+[] Wenn Invader/Aliens die Rand des Bildschirms berühren, kann es vorkommen, dass sich die Schleife für das Y-Level loopt und diese Invader "vom Himmel fallen"
+[] Game Over Mechanismus, wenn Invader Fenster Unterseite berühren einfügen
+[] Texturen aktuell etwas sehr klein, einige Texturen vergrößert (Player Explosion, Player und Projektile)
+[] Schilder implementieren
+[] Vielleicht PowerUp
