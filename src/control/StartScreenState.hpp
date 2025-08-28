@@ -14,9 +14,9 @@ public:
     void draw(sf::RenderWindow& window) override;
 
 private:
-    Game& gameRef;
     sf::Text titleText;
     sf::Text instructionText;
+    sf::Text highScoreText;
 };
 
 #endif //STARTSCREENSTATE_HPP

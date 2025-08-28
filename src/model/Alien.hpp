@@ -5,16 +5,21 @@
 
 class Alien {
 public:
-    Alien(float startX, float startY, int score); // Konstruktor nimmt jetzt einen Punktewert an
+    Alien(const sf::Texture& texture, float startX, float startY, int score);
     void move(float x, float y);
-    const sf::RectangleShape& getShape() const;
+
+    // Gibt eine veränderbare Referenz zurück, um die Textur zu wechseln
+    sf::Sprite& getSprite();
+    const sf::Sprite& getSprite() const;
+
     sf::FloatRect getBounds() const;
+    sf::Vector2f getPosition() const;
 
     bool isActive = true;
-    int scoreValue; // Punktewert für diesen Alien-Typ
+    int scoreValue;
 
 private:
-    sf::RectangleShape shape;
+    sf::Sprite sprite;
 };
 
 #endif //ALIEN_HPP

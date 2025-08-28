@@ -1,24 +1,38 @@
 #include "GameOverState.hpp"
 #include "Game.hpp"
 #include "../model/Constants.hpp"
+#include <string>
 
 GameOverState::GameOverState(Game& game)
-    : gameRef(game),
-      gameOverText(game.getFont(), "GAME OVER", 70),
-      instructionText(game.getFont(), "Press Enter to Restart", 30)
+    : gameOverText(game.getFont(), "GAME OVER", 70),
+      scoreText(game.getFont(), "Your Score: " + std::to_string(game.getLastScore()), 30),
+      highScoreText(game.getFont(), "High Score: " + std::to_string(game.getHighScore()), 30),
+      instructionText(game.getFont(), "Press Enter to Restart\nPress M for Menu", 24)
 {
-    // Konfiguriere Game-Over-Text
+    // Game Over Text
     gameOverText.setFillColor(sf::Color::Red);
     gameOverText.setStyle(sf::Text::Bold);
-    sf::FloatRect titleRect = gameOverText.getLocalBounds();
-    gameOverText.setOrigin({titleRect.position.x + titleRect.size.x / 2.0f, titleRect.position.y + titleRect.size.y / 2.0f});
-    gameOverText.setPosition({Constants::WINDOW_WIDTH / 2.0f, Constants::WINDOW_HEIGHT / 2.0f - 100.f});
+    sf::FloatRect goRect = gameOverText.getLocalBounds();
+    gameOverText.setOrigin({goRect.position.x + goRect.size.x / 2.0f, goRect.position.y + goRect.size.y / 2.0f});
+    gameOverText.setPosition({Constants::WINDOW_WIDTH / 2.0f, Constants::WINDOW_HEIGHT / 2.0f - 150.f});
 
-    // Konfiguriere Anweisungs-Text
-    instructionText.setFillColor(sf::Color::White);
-    sf::FloatRect instructionRect = instructionText.getLocalBounds();
-    instructionText.setOrigin({instructionRect.position.x + instructionRect.size.x / 2.0f, instructionRect.position.y + instructionRect.size.y / 2.0f});
-    instructionText.setPosition({Constants::WINDOW_WIDTH / 2.0f, Constants::WINDOW_HEIGHT / 2.0f});
+    // Score Text
+    scoreText.setFillColor(sf::Color::White);
+    sf::FloatRect scoreRect = scoreText.getLocalBounds();
+    scoreText.setOrigin({scoreRect.position.x + scoreRect.size.x / 2.0f, scoreRect.position.y + scoreRect.size.y / 2.0f});
+    scoreText.setPosition({Constants::WINDOW_WIDTH / 2.0f, Constants::WINDOW_HEIGHT / 2.0f - 50.f});
+
+    // Highscore Text
+    highScoreText.setFillColor(sf::Color::Yellow);
+    sf::FloatRect hsRect = highScoreText.getLocalBounds();
+    highScoreText.setOrigin({hsRect.position.x + hsRect.size.x / 2.0f, hsRect.position.y + hsRect.size.y / 2.0f});
+    highScoreText.setPosition({Constants::WINDOW_WIDTH / 2.0f, Constants::WINDOW_HEIGHT / 2.0f});
+
+    // Anweisungs-Text
+    instructionText.setFillColor(sf::Color(180, 180, 180));
+    sf::FloatRect instRect = instructionText.getLocalBounds();
+    instructionText.setOrigin({instRect.position.x + instRect.size.x / 2.0f, instRect.position.y + instRect.size.y / 2.0f});
+    instructionText.setPosition({Constants::WINDOW_WIDTH / 2.0f, Constants::WINDOW_HEIGHT / 2.0f + 100.f});
 }
 
 void GameOverState::handleEvents(Game& game) {
@@ -30,15 +44,18 @@ void GameOverState::handleEvents(Game& game) {
             if (keyPressed->code == sf::Keyboard::Key::Enter) {
                 game.changeStateToPlaying();
             }
+            if (keyPressed->code == sf::Keyboard::Key::M) {
+                game.changeStateToStartScreen();
+            }
         }
     }
 }
 
-void GameOverState::update(float deltaTime) {
-    // Nichts zu aktualisieren
-}
+void GameOverState::update(float deltaTime) {}
 
 void GameOverState::draw(sf::RenderWindow& window) {
     window.draw(gameOverText);
+    window.draw(scoreText);
+    window.draw(highScoreText);
     window.draw(instructionText);
 }

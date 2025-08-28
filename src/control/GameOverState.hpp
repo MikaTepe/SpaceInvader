@@ -13,8 +13,9 @@ public:
     void draw(sf::RenderWindow& window) override;
 
 private:
-    Game& gameRef;
     sf::Text gameOverText;
+    sf::Text scoreText;
+    sf::Text highScoreText;
     sf::Text instructionText;
 };
 

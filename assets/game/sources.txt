@@ -1,1 +1,0 @@
-Alle assets in dem Ordner "assets/game" wurden aus dem GitHub Repo "https://github.com/brunotnasc/space-invaders" bezogen.

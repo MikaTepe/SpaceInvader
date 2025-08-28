@@ -1,24 +1,44 @@
 #include "Projectile.hpp"
 #include "Constants.hpp"
 
-// Der Konstruktor setzt jetzt die übergebene Farbe
-Projectile::Projectile(float startX, float startY, float dirX, float dirY, sf::Color color) {
-    shape.setSize({5.f, 15.f});
-    shape.setFillColor(color); // Farbe wird hier gesetzt
-    shape.setOrigin(shape.getSize() / 2.f);
-    shape.setPosition({startX, startY});
-    direction = {dirX, dirY};
-    speed = Constants::PROJECTILE_SPEED;
+Projectile::Projectile(Type type, const TextureManager* textures, sf::Vector2f position, sf::Vector2f direction)
+    : textureManager(textures),
+      sprite(textureManager->get(type == Type::Player ? TextureID::PlayerMissile1 : TextureID::AlienMissile1)),
+      projectileType(type),
+      currentFrame(0),
+      animationInterval(sf::seconds(0.2f))
+{
+    this->direction = direction;
+    this->speed = Constants::PROJECTILE_SPEED;
+
+    if (projectileType == Type::Player) {
+        animationFrames = { TextureID::PlayerMissile1, TextureID::PlayerMissile2, TextureID::PlayerMissile3, TextureID::PlayerMissile4 };
+    } else {
+        animationFrames = { TextureID::AlienMissile1, TextureID::AlienMissile2, TextureID::AlienMissile3, TextureID::AlienMissile4 };
+    }
+
+    sf::FloatRect bounds = sprite.getLocalBounds();
+    sprite.setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
+    sprite.setPosition(position);
 }
 
 void Projectile::update(float deltaTime) {
-    shape.move(direction * speed * deltaTime);
+    sprite.move(direction * speed * deltaTime);
+    animate();
 }
 
-const sf::RectangleShape& Projectile::getShape() const {
-    return shape;
+void Projectile::animate() {
+    if (animationClock.getElapsedTime() > animationInterval) {
+        currentFrame = (currentFrame + 1) % animationFrames.size();
+        sprite.setTexture(textureManager->get(animationFrames[currentFrame]));
+        animationClock.restart();
+    }
+}
+
+const sf::Sprite& Projectile::getSprite() const {
+    return sprite;
 }
 
 sf::FloatRect Projectile::getBounds() const {
-    return shape.getGlobalBounds();
+    return sprite.getGlobalBounds();
 }

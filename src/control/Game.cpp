@@ -4,10 +4,15 @@
 #include "GameOverState.hpp"
 #include "../model/Constants.hpp"
 #include <iostream>
+#include <fstream>
 
 Game::Game() :
     window(sf::VideoMode({Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT}), "Space Invaders"),
-    font(std::make_unique<sf::Font>())
+    font(std::make_unique<sf::Font>()),
+    textureManager(),
+    starfield(),
+    highScore(0),
+    lastScore(0)
 {
     window.setFramerateLimit(60);
 
@@ -17,7 +22,22 @@ Game::Game() :
         return;
     }
 
+    loadHighScore();
     currentState = std::make_unique<StartScreenState>(*this);
+}
+
+void Game::loadHighScore() {
+    std::ifstream file("highscore.txt");
+    if (file.is_open()) {
+        file >> highScore;
+    }
+}
+
+void Game::saveHighScore() {
+    std::ofstream file("highscore.txt");
+    if (file.is_open()) {
+        file << highScore;
+    }
 }
 
 void Game::run() {
@@ -38,6 +58,7 @@ void Game::processEvents() {
 }
 
 void Game::update(float deltaTime) {
+    starfield.update(deltaTime);
     if (currentState) {
         currentState->update(deltaTime);
     }
@@ -45,6 +66,7 @@ void Game::update(float deltaTime) {
 
 void Game::render() {
     window.clear();
+    starfield.draw(window);
     if (currentState) {
         currentState->draw(window);
     }
@@ -55,12 +77,20 @@ void Game::changeState(std::unique_ptr<GameState> newState) {
     currentState = std::move(newState);
 }
 
+void Game::changeStateToStartScreen() {
+    changeState(std::make_unique<StartScreenState>(*this));
+}
+
 void Game::changeStateToPlaying() {
-    //Übergibt 'this' an den Konstruktor von PlayingState
     changeState(std::make_unique<PlayingState>(*this));
 }
 
-void Game::changeStateToGameOver() {
+void Game::changeStateToGameOver(int finalScore) {
+    lastScore = finalScore;
+    if (lastScore > highScore) {
+        highScore = lastScore;
+        saveHighScore();
+    }
     changeState(std::make_unique<GameOverState>(*this));
 }
 
@@ -70,4 +100,16 @@ sf::RenderWindow& Game::getWindow() {
 
 const sf::Font& Game::getFont() const {
     return *font;
+}
+
+const TextureManager& Game::getTextureManager() const {
+    return textureManager;
+}
+
+int Game::getHighScore() const {
+    return highScore;
+}
+
+int Game::getLastScore() const {
+    return lastScore;
 }

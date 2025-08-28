@@ -2,15 +2,13 @@ CXX := c++
 CXXFLAGS := -Wall -std=c++20
 
 # Contain path for any includes (headers)
-# Depending on your platform: Include a path to boost, on linux should be 
-# /usr/local/include, on mac could be /opt/homebrew/include
 GTEST_INCLUDES := -IGoogleTest/googletest/include -IGoogleTest/googletest \
-			      -IGoogleTest/googlemock/include -IGoogleTest/googlemock
+                -IGoogleTest/googlemock/include -IGoogleTest/googlemock
 INCLUDES := -I./SFML/include -I/opt/homebrew/include $(GTEST_INCLUDES)
 
 # Contains libraries we need to (-L is directory search path, -l is lib)
 LDFLAGS := -L/usr/local/lib -L./SFML/lib -L/opt/homebrew/lib
-LDLIBS := -lsfml-system -lsfml-window -lsfml-graphics
+LDLIBS := -lsfml-system -lsfml-window -lsfml-graphics -lsfml-audio
 
 SRCDIR := ./src
 TESTDIR := ./test
@@ -22,7 +20,7 @@ SRCFILES := $(shell find $(SRCDIR) -name '*.cpp')
 TEST_SOURCES := $(shell find $(TESTDIR) $(SRCDIR)/model $(SRCDIR)/view $(SRCDIR)/control -name '*.cpp')
 TEST_OBJECTS := $(patsubst %.cpp,$(BUILDDIR)/%.o,$(TEST_SOURCES))
 GAME_OBJECTS := $(SRCFILES:$(SRCDIR)/%.cpp=$(BUILDDIR)/src/%.o)
-DEPENDENCIES := $(SRCFILES:$(SRCDIR)/%.cpp=$(BUILDDIR)/src/%.d) 
+DEPENDENCIES := $(SRCFILES:$(SRCDIR)/%.cpp=$(BUILDDIR)/src/%.d)
 
 # build GTest
 GTEST_DIR := GoogleTest
@@ -38,8 +36,8 @@ $(BUILDDIR)/libgmock.a: $(BUILDDIR)/gmock-all.o
 	ar rcs $@ $^
 
 
-# build game 
-game: $(GAME_OBJECTS) 
+# build game
+game: $(GAME_OBJECTS)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
 # build tests
@@ -47,7 +45,7 @@ TEST_BINARY := Test
 
 tests: $(TEST_OBJECTS) $(BUILDDIR)/libgtest.a $(BUILDDIR)/libgmock.a
 	$(CXX) $(INCLUDES) $(CXXFLAGS) $(filter %.o,$^) -L$(BUILDDIR) -lgtest -lgmock -pthread -o $@  $(LDFLAGS) $(LDLIBS)
-	
+
 -include $(DEPENDENCIES)
 
 getGTest:

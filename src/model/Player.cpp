@@ -1,18 +1,22 @@
 #include "Player.hpp"
 #include "Constants.hpp"
 
-Player::Player() : lives(3), invincible(false), invincibilityDuration(sf::seconds(2.f)) {
-    shape.setSize({60.f, 20.f});
-    shape.setFillColor(sf::Color::Green);
-    shape.setOrigin(shape.getSize() / 2.f);
-    shape.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - 50.f});
+Player::Player(const sf::Texture& texture) :
+    sprite(texture),
+    lives(3),
+    invincible(false),
+    invincibilityDuration(sf::seconds(2.f))
+{
+    sf::FloatRect bounds = sprite.getLocalBounds();
+    sprite.setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
+    sprite.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - 50.f});
 }
 
 void Player::update(float deltaTime) {
     if (invincible) {
         if (invincibilityClock.getElapsedTime() >= invincibilityDuration) {
             invincible = false;
-            shape.setFillColor(sf::Color::Green);
+            sprite.setColor(sf::Color::White); // Farbe zurücksetzen
         }
         return;
     }
@@ -24,15 +28,15 @@ void Player::update(float deltaTime) {
     if (isMovingRight) {
         movement.x += Constants::PLAYER_SPEED * deltaTime;
     }
-    shape.move(movement);
+    sprite.move(movement);
 
-    const auto& pos = shape.getPosition();
-    const auto halfWidth = shape.getSize().x / 2.f;
+    const auto& pos = sprite.getPosition();
+    const auto halfWidth = sprite.getGlobalBounds().size.x / 2.f;
     if (pos.x < halfWidth) {
-        shape.setPosition({halfWidth, pos.y});
+        sprite.setPosition({halfWidth, pos.y});
     }
     if (pos.x > Constants::WINDOW_WIDTH - halfWidth) {
-        shape.setPosition({Constants::WINDOW_WIDTH - halfWidth, pos.y});
+        sprite.setPosition({Constants::WINDOW_WIDTH - halfWidth, pos.y});
     }
 }
 
@@ -41,32 +45,19 @@ void Player::handleHit() {
         lives--;
         invincible = true;
         invincibilityClock.restart();
-        shape.setFillColor(sf::Color(128, 128, 128, 128));
+        sprite.setColor(sf::Color(255, 255, 255, 128)); // Leicht transparent
     }
 }
 
 void Player::respawn() {
-    shape.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - 50.f});
+    sprite.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - 50.f});
     isMovingLeft = false;
     isMovingRight = false;
 }
 
-int Player::getLives() const {
-    return lives;
-}
-
-bool Player::isInvincible() const {
-    return invincible;
-}
-
-sf::RectangleShape& Player::getShape() {
-    return shape;
-}
-
-const sf::RectangleShape& Player::getShape() const {
-    return shape;
-}
-
-sf::FloatRect Player::getBounds() const {
-    return shape.getGlobalBounds();
-}
+int Player::getLives() const { return lives; }
+bool Player::isInvincible() const { return invincible; }
+sf::Sprite& Player::getSprite() { return sprite; }
+const sf::Sprite& Player::getSprite() const { return sprite; }
+sf::FloatRect Player::getBounds() const { return sprite.getGlobalBounds(); }
+sf::Vector2f Player::getPosition() const { return sprite.getPosition(); }
