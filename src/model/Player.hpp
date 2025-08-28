@@ -1,30 +1,24 @@
 #ifndef PLAYER_HPP
 #define PLAYER_HPP
 
-#include <SFML/Graphics.hpp>
+#include "GameObject.hpp"
+#include "Constants.hpp"
+#include <SFML/System/Time.hpp>
+#include <SFML/System/Clock.hpp>
 
-class Player {
+class Player : public GameObject {
 public:
     explicit Player(const sf::Texture& texture);
-    void update(float deltaTime);
 
-    sf::Sprite& getSprite();
-    const sf::Sprite& getSprite() const;
-
-    sf::FloatRect getBounds() const;
-    sf::Vector2f getPosition() const;
-
+    void update(float deltaTime) override; // Funktioniert jetzt korrekt
     void handleHit();
     void respawn();
-    int getLives() const;
-    bool isInvincible() const;
 
-    bool isMovingLeft = false;
-    bool isMovingRight = false;
-    bool isActive = true;
+    bool isInvincible() const;
+    int getLives() const;
 
 private:
-    sf::Sprite sprite;
+    float speed;
     int lives;
     bool invincible;
     sf::Clock invincibilityClock;

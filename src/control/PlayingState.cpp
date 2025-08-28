@@ -2,6 +2,7 @@
 #include "Game.hpp"
 #include "../model/Constants.hpp"
 #include "../view/TextureManager.hpp"
+#include <SFML/Window/Keyboard.hpp>
 #include <random>
 #include <string>
 
@@ -44,25 +45,12 @@ void PlayingState::setupNewWave() {
 
 void PlayingState::handleEvents(Game& game) {
     while (auto event = game.getWindow().pollEvent()) {
-        if (event->is<sf::Event::Closed>()) game.getWindow().close();
-        if (!player.isInvincible()) {
-            if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) handlePlayerInput(keyPressed->code, true);
-            else if (const auto* keyReleased = event->getIf<sf::Event::KeyReleased>()) handlePlayerInput(keyReleased->code, false);
+        if (event->is<sf::Event::Closed>()) {
+            game.getWindow().close();
         }
     }
 }
 
-void PlayingState::handlePlayerInput(sf::Keyboard::Key key, bool isPressed) {
-    if (key == sf::Keyboard::Key::Left) player.isMovingLeft = isPressed;
-    else if (key == sf::Keyboard::Key::Right) player.isMovingRight = isPressed;
-    else if (key == sf::Keyboard::Key::Space && isPressed) {
-        if (playerShootClock.getElapsedTime() >= playerShootCooldown) {
-            playerProjectiles.emplace_back(Projectile::Type::Player, &gameRef.getTextureManager(), player.getPosition(), sf::Vector2f(0, -1));
-            playerShootClock.restart();
-            soundManager.play(SoundEffect::PlayerShoot);
-        }
-    }
-}
 
 void PlayingState::update(float deltaTime) {
     if (player.getLives() <= 0) {
@@ -71,6 +59,20 @@ void PlayingState::update(float deltaTime) {
     }
     player.update(deltaTime);
 
+    if (!player.isInvincible()) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
+            if (playerShootClock.getElapsedTime() >= playerShootCooldown) {
+                sf::Vector2f projectilePosition = {
+                    player.getPosition().x,
+                    player.getPosition().y - player.getBounds().size.y / 2.f
+                };
+                playerProjectiles.emplace_back(Projectile::Type::Player, &gameRef.getTextureManager(), projectilePosition, sf::Vector2f(0, -1));
+                playerShootClock.restart();
+                soundManager.play(SoundEffect::PlayerShoot);
+            }
+        }
+    }
+
     bool allAliensDefeated = true;
     bool changeDirection = false;
     for (auto& alien : aliens) {
@@ -78,7 +80,14 @@ void PlayingState::update(float deltaTime) {
             allAliensDefeated = false;
             alien.move(alienDirection * currentAlienSpeed * deltaTime, 0);
             const auto& alienBounds = alien.getBounds();
-            if (alienBounds.position.x < 0 || (alienBounds.position.x + alienBounds.size.x) > Constants::WINDOW_WIDTH) {
+
+            if (alienBounds.position.y + alienBounds.size.y >= Constants::WINDOW_HEIGHT) {
+                gameRef.changeStateToGameOver(score);
+                return;
+            }
+
+            if ((alienDirection > 0 && (alienBounds.position.x + alienBounds.size.x) > Constants::WINDOW_WIDTH) ||
+                (alienDirection < 0 && alienBounds.position.x < 0)) {
                 changeDirection = true;
             }
         }
@@ -87,7 +96,9 @@ void PlayingState::update(float deltaTime) {
     if (allAliensDefeated) setupNewWave();
     if (changeDirection) {
         alienDirection *= -1.0f;
-        for (auto& alien : aliens) alien.move(0, 20.0f);
+        for (auto& alien : aliens) {
+            alien.move(0, 20.0f);
+        }
     }
 
     updateAlienAnimation();
@@ -139,7 +150,7 @@ void PlayingState::updateHUD() {
 void PlayingState::alienShoot() {
     if (alienProjectiles.empty() && alienShootClock.getElapsedTime() >= alienShootInterval) {
         std::vector<int> activeAlienIndices;
-        for (int i = 0; i < aliens.size(); ++i) {
+        for (size_t i = 0; i < aliens.size(); ++i) {
             if (aliens[i].isActive) activeAlienIndices.push_back(i);
         }
         if (!activeAlienIndices.empty()) {

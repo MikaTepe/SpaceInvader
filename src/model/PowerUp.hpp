@@ -1,17 +1,15 @@
-#pragma once
+#ifndef POWERUP_HPP
+#define POWERUP_HPP
 
 #include "GameObject.hpp"
 #include "Constants.hpp"
-#include "Player.hpp" // Nötig für applyEffect
+#include <SFML/Graphics/Texture.hpp>
 
 class PowerUp : public GameObject {
 public:
-    // Konstruktor, der die Startposition festlegt
-    PowerUp(float startX, float startY);
+    PowerUp(const sf::Texture& texture, float startX, float startY);
 
-    // Bewegt das Power-Up nach unten
-    void update(float deltaTime);
-
-    // Wendet den Effekt auf den Spieler an (Beispiel)
-    void applyEffect(Player& player);
+    void update(float deltaTime) override;
 };
+
+#endif //POWERUP_HPP

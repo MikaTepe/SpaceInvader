@@ -1,42 +1,35 @@
 #include "Player.hpp"
-#include "Constants.hpp"
+#include <SFML/Window/Keyboard.hpp>
 
-Player::Player(const sf::Texture& texture) :
-    sprite(texture),
-    lives(3),
-    invincible(false),
-    invincibilityDuration(sf::seconds(2.f))
+Player::Player(const sf::Texture& texture)
+    : GameObject(texture),
+      speed(Constants::PLAYER_SPEED),
+      lives(3),
+      invincible(false),
+      invincibilityDuration(sf::seconds(1.5f))
 {
-    sf::FloatRect bounds = sprite.getLocalBounds();
-    sprite.setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
+    sprite.setOrigin({sprite.getGlobalBounds().size.x / 2.f, sprite.getGlobalBounds().size.y / 2.f});
+
     sprite.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - 50.f});
 }
 
 void Player::update(float deltaTime) {
-    if (invincible) {
-        if (invincibilityClock.getElapsedTime() >= invincibilityDuration) {
-            invincible = false;
-            sprite.setColor(sf::Color::White); // Farbe zurücksetzen
+    if (invincible && invincibilityClock.getElapsedTime() > invincibilityDuration) {
+        invincible = false;
+        sprite.setColor(sf::Color::White);
+    }
+
+    if (!invincible) {
+        velocity.x = 0.f;
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && (sprite.getPosition().x > sprite.getGlobalBounds().size.x / 2.f)) {
+            velocity.x -= speed;
         }
-        return;
-    }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) && (sprite.getPosition().x < Constants::WINDOW_WIDTH - sprite.getGlobalBounds().size.x / 2.f)) {
+            velocity.x += speed;
+        }
 
-    sf::Vector2f movement(0.f, 0.f);
-    if (isMovingLeft) {
-        movement.x -= Constants::PLAYER_SPEED * deltaTime;
-    }
-    if (isMovingRight) {
-        movement.x += Constants::PLAYER_SPEED * deltaTime;
-    }
-    sprite.move(movement);
-
-    const auto& pos = sprite.getPosition();
-    const auto halfWidth = sprite.getGlobalBounds().size.x / 2.f;
-    if (pos.x < halfWidth) {
-        sprite.setPosition({halfWidth, pos.y});
-    }
-    if (pos.x > Constants::WINDOW_WIDTH - halfWidth) {
-        sprite.setPosition({Constants::WINDOW_WIDTH - halfWidth, pos.y});
+        sprite.move(velocity * deltaTime);
     }
 }
 
@@ -45,19 +38,21 @@ void Player::handleHit() {
         lives--;
         invincible = true;
         invincibilityClock.restart();
-        sprite.setColor(sf::Color(255, 255, 255, 128)); // Leicht transparent
+        sprite.setColor(sf::Color(255, 255, 255, 128));
     }
 }
 
 void Player::respawn() {
     sprite.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - 50.f});
-    isMovingLeft = false;
-    isMovingRight = false;
+    invincible = true;
+    invincibilityClock.restart();
+    sprite.setColor(sf::Color(255, 255, 255, 128));
 }
 
-int Player::getLives() const { return lives; }
-bool Player::isInvincible() const { return invincible; }
-sf::Sprite& Player::getSprite() { return sprite; }
-const sf::Sprite& Player::getSprite() const { return sprite; }
-sf::FloatRect Player::getBounds() const { return sprite.getGlobalBounds(); }
-sf::Vector2f Player::getPosition() const { return sprite.getPosition(); }
+bool Player::isInvincible() const {
+    return invincible;
+}
+
+int Player::getLives() const {
+    return lives;
+}
