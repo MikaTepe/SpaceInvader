@@ -12,19 +12,19 @@ PlayingState::PlayingState(Game& game)
       alienDirection(1.0f),
       score(0),
       waveNumber(0),
-      playerShootCooldown(sf::seconds(0.4f)),
-      alienShootInterval(sf::seconds(1.0f)),
-      animationInterval(sf::seconds(1.0f)),
+      playerShootCooldown(sf::seconds(Constants::PLAYER_SHOOT_COOLDOWN)),
+      alienShootInterval(sf::seconds(Constants::ALIEN_SHOOT_INTERVAL)),
+      animationInterval(sf::seconds(Constants::ALIEN_ANIMATION_INTERVAL)),
       isFirstFrame(true),
-      scoreText(game.getFont(), "Score: 0", 24)
+      scoreText(game.getFont(), "Score: 0", Constants::HUD_FONT_SIZE)
 {
     srand(time(NULL));
     scoreText.setFillColor(sf::Color::White);
-    scoreText.setPosition({Constants::WINDOW_WIDTH / 2.f - scoreText.getLocalBounds().size.x / 2.f, 10.f});
-    for (int i = 0; i < 3; ++i) {
-        sf::RectangleShape block({25.f, 15.f});
+    scoreText.setPosition({Constants::WINDOW_WIDTH / 2.f - scoreText.getLocalBounds().size.x / 2.f, Constants::SCORE_TEXT_Y});
+    for (int i = 0; i < Constants::PLAYER_INITIAL_LIVES; ++i) {
+        sf::RectangleShape block({Constants::LIFE_BLOCK_WIDTH, Constants::LIFE_BLOCK_HEIGHT});
         block.setFillColor(sf::Color::Red);
-        block.setPosition({Constants::WINDOW_WIDTH - 120.f + (i * 35.f), 15.f});
+        block.setPosition({Constants::WINDOW_WIDTH - Constants::LIFE_BLOCK_START_X_OFFSET + (i * Constants::LIFE_BLOCK_SPACING), Constants::LIFE_BLOCK_Y});
         lifeBlocks.push_back(block);
     }
     setupNewWave();
@@ -33,26 +33,25 @@ PlayingState::PlayingState(Game& game)
 
 void PlayingState::setupNewWave() {
     waveNumber++;
-    currentAlienSpeed = Constants::ALIEN_SPEED + (10.0f * (waveNumber - 1));
+    currentAlienSpeed = Constants::ALIEN_SPEED + (Constants::ALIEN_SPEED_INCREASE_PER_WAVE * (waveNumber - 1));
     aliens.clear();
-    for (int i = 0; i < 5; ++i) {
-        for (int j = 0; j < 11; ++j) {
-            int points = (i < 2) ? 20 : 10;
-            TextureID initialTexture = (points == 20) ? TextureID::InvaderL1 : TextureID::InvaderM1;
-            aliens.emplace_back(gameRef.getTextureManager().get(initialTexture), 100.0f + j * 60.0f, 50.0f + i * 40.0f, points);
+    for (int i = 0; i < Constants::ALIEN_ROWS; ++i) {
+        for (int j = 0; j < Constants::ALIEN_COLS; ++j) {
+            int points = (i < 2) ? Constants::ALIEN_TOP_ROW_SCORE : Constants::ALIEN_BOTTOM_ROW_SCORE;
+            TextureID initialTexture = (points == Constants::ALIEN_TOP_ROW_SCORE) ? TextureID::InvaderL1 : TextureID::InvaderM1;
+            aliens.emplace_back(gameRef.getTextureManager().get(initialTexture), Constants::ALIEN_START_X + j * Constants::ALIEN_SPACING_X, Constants::ALIEN_START_Y + i * Constants::ALIEN_SPACING_Y, points);
         }
     }
 }
 
 void PlayingState::setupShelters() {
     shelters.clear();
-    // KORREKTUR: Platziert die Shelter symmetrisch über den Bildschirm.
-    float y_position = 450.f; // Die Y-Position bleibt gleich.
+    float y_position = Constants::SHELTER_Y_POSITION;
     float quarter_width = Constants::WINDOW_WIDTH / 4.f;
 
-    shelters.emplace_back(gameRef.getTextureManager(), quarter_width * 1, y_position);      // Bei 25% der Bildschirmbreite
-    shelters.emplace_back(gameRef.getTextureManager(), quarter_width * 2, y_position);      // Bei 50% (Mitte)
-    shelters.emplace_back(gameRef.getTextureManager(), quarter_width * 3, y_position);      // Bei 75%
+    shelters.emplace_back(gameRef.getTextureManager(), quarter_width * 1, y_position);
+    shelters.emplace_back(gameRef.getTextureManager(), quarter_width * 2, y_position);
+    shelters.emplace_back(gameRef.getTextureManager(), quarter_width * 3, y_position);
 }
 
 void PlayingState::handleEvents(Game& game) {
@@ -70,12 +69,9 @@ void PlayingState::update(float deltaTime) {
         return;
     }
 
-    // Zuerst den Spieler-Zustand aktualisieren. Dies prüft, ob die Unverwundbarkeit abgelaufen ist.
     player.update(deltaTime);
 
-    // Prüfen, ob der Spieler verwundbar ist. Nur dann Eingaben verarbeiten.
     if (!player.isInvincible()) {
-        // Bewegung links/rechts
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
             player.moveLeft(deltaTime);
         }
@@ -83,7 +79,6 @@ void PlayingState::update(float deltaTime) {
             player.moveRight(deltaTime);
         }
 
-        // Schießen
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
             if (playerShootClock.getElapsedTime() >= playerShootCooldown) {
                 sf::Vector2f projectilePosition = {
@@ -120,7 +115,7 @@ void PlayingState::update(float deltaTime) {
     if (changeDirection) {
         alienDirection *= -1.0f;
         for (auto& alien : aliens) {
-            alien.move(0, 20.0f);
+            alien.move(0, Constants::ALIEN_MOVE_DOWN_STEP);
         }
     }
 
@@ -153,7 +148,7 @@ void PlayingState::updateAlienAnimation() {
         for (auto& alien : aliens) {
             if (alien.isActive) {
                 TextureID newTextureId;
-                if (alien.scoreValue == 20) {
+                if (alien.scoreValue == Constants::ALIEN_TOP_ROW_SCORE) {
                     newTextureId = isFirstFrame ? TextureID::InvaderL1 : TextureID::InvaderL2;
                 } else {
                     newTextureId = isFirstFrame ? TextureID::InvaderM1 : TextureID::InvaderM2;
@@ -168,7 +163,7 @@ void PlayingState::updateAlienAnimation() {
 void PlayingState::updateHUD() {
     scoreText.setString("Score: " + std::to_string(score));
     scoreText.setOrigin({scoreText.getLocalBounds().size.x / 2.f, 0});
-    scoreText.setPosition({Constants::WINDOW_WIDTH / 2.f, 10.f});
+    scoreText.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::SCORE_TEXT_Y});
     for(size_t i = 0; i < lifeBlocks.size(); ++i) {
         lifeBlocks[i].setFillColor(i < static_cast<size_t>(player.getLives()) ? sf::Color::Red : sf::Color(100, 100, 100));
     }
@@ -214,7 +209,7 @@ void PlayingState::checkCollisions() {
         [this](Projectile& projectile) {
             if (projectile.isActive && !player.isInvincible() && projectile.getBounds().findIntersection(player.getBounds())) {
                 player.handleHit();
-                explosions.emplace_back(gameRef.getTextureManager().get(TextureID::PlayerExplosion), player.getPosition(), 3.0f);
+                explosions.emplace_back(gameRef.getTextureManager().get(TextureID::PlayerExplosion), player.getPosition(), Constants::PLAYER_EXPLOSION_SCALE);
                 if (player.getLives() > 0) player.respawn();
                 return true;
             }

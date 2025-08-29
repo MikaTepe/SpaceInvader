@@ -1,17 +1,16 @@
 #include "Explosion.hpp"
+#include "../model/Constants.hpp"
 
 Explosion::Explosion(const sf::Texture& texture, sf::Vector2f position, float scale)
-    : sprite(texture), finished(false) // Initialisiere 'sprite' hier
+    : sprite(texture), finished(false)
 {
-    // Die restliche Konfiguration erfolgt nach der Erstellung.
     sprite.setOrigin({sprite.getLocalBounds().size.x / 2.f, sprite.getLocalBounds().size.y / 2.f});
     sprite.setPosition(position);
     sprite.setScale({scale, scale});
 }
 
 void Explosion::update(float deltaTime) {
-
-    if (clock.getElapsedTime().asSeconds() > 0.5f) { // Beispielzeit
+    if (clock.getElapsedTime().asSeconds() > Constants::EXPLOSION_DURATION) {
         finished = true;
     }
 }

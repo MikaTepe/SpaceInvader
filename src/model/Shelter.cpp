@@ -1,11 +1,12 @@
 #include "Shelter.hpp"
 #include <string>
+#include "Constants.hpp"
 
 sf::Font& Shelter::getSharedFont() {
     static sf::Font font;
     static bool fontLoaded = false;
     if (!fontLoaded) {
-        if (font.openFromFile("assets/fonts/DejaVuSansMono.ttf")) {
+        if (font.openFromFile(Constants::FONT_PATH)) {
             fontLoaded = true;
         }
     }
@@ -14,18 +15,16 @@ sf::Font& Shelter::getSharedFont() {
 
 Shelter::Shelter(const TextureManager& textureManager, float x, float y)
     : sprite(textureManager.get(TextureID::ShelterFull)),
-      health(30),
+      health(Constants::SHELTER_INITIAL_HEALTH),
       textureManagerRef(textureManager),
-      healthText(getSharedFont(), std::to_string(health), 12)
+      healthText(getSharedFont(), std::to_string(health), Constants::SHELTER_HEALTH_FONT_SIZE)
 {
     healthText.setFillColor(sf::Color::White);
 
-    // getLocalBounds() gibt die Originalgröße der Textur an
     sprite.setOrigin({sprite.getLocalBounds().size.x / 2.f, sprite.getLocalBounds().size.y / 2.f});
 
-    // Die Position und Skalierung werden nach dem Setzen des Ursprungs angewendet.
     sprite.setPosition({x, y});
-    sprite.setScale({2.0f, 2.0f});
+    sprite.setScale({Constants::SHELTER_SCALE, Constants::SHELTER_SCALE});
 
     updateTexture();
 }
@@ -55,10 +54,10 @@ bool Shelter::isDestroyed() const {
 void Shelter::updateTexture() {
     if (health > 0) {
         TextureID id = TextureID::ShelterFull;
-        if (health < 30) {
-            int damageLevel = 9 - (health - 1) / 3;
+        if (health < Constants::SHELTER_INITIAL_HEALTH) {
+            int damageLevel = Constants::SHELTER_DAMAGE_LEVELS - (health - 1) / Constants::SHELTER_HEALTH_PER_DAMAGE_LEVEL;
             if (damageLevel < 1) damageLevel = 1;
-            if (damageLevel > 9) damageLevel = 9;
+            if (damageLevel > Constants::SHELTER_DAMAGE_LEVELS) damageLevel = Constants::SHELTER_DAMAGE_LEVELS;
             id = static_cast<TextureID>(static_cast<int>(TextureID::ShelterDamaged1) + (damageLevel - 1));
         }
         sprite.setTexture(textureManagerRef.get(id));
@@ -67,10 +66,8 @@ void Shelter::updateTexture() {
     healthText.setString(std::to_string(health));
     sf::FloatRect textRect = healthText.getLocalBounds();
 
-    // Zentriert den Ursprung des Textes
     healthText.setOrigin({textRect.position.x + textRect.size.x / 2.0f, textRect.position.y + textRect.size.y / 2.0f});
 
-    // Positioniert den Text mittig über dem Shelter
     float shelterTopEdge = sprite.getPosition().y - (sprite.getGlobalBounds().size.y / 2.f);
-    healthText.setPosition({sprite.getPosition().x, shelterTopEdge - 15.f});
+    healthText.setPosition({sprite.getPosition().x, shelterTopEdge - Constants::SHELTER_HEALTH_TEXT_Y_OFFSET});
 }

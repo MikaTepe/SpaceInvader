@@ -7,16 +7,16 @@
 #include <fstream>
 
 Game::Game() :
-    window(sf::VideoMode({Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT}), "Space Invaders"),
+    window(sf::VideoMode({static_cast<unsigned int>(Constants::WINDOW_WIDTH), static_cast<unsigned int>(Constants::WINDOW_HEIGHT)}), "Space Invaders"),
     font(std::make_unique<sf::Font>()),
     textureManager(),
     starfield(),
     highScore(0),
     lastScore(0)
 {
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(Constants::FRAME_RATE_LIMIT);
 
-    if (!font->openFromFile("assets/fonts/DejaVuSansMono.ttf")) {
+    if (!font->openFromFile(Constants::FONT_PATH)) {
         std::cerr << "Error loading font" << std::endl;
         window.close();
         return;
@@ -27,14 +27,14 @@ Game::Game() :
 }
 
 void Game::loadHighScore() {
-    std::ifstream file("highscore.txt");
+    std::ifstream file(Constants::HIGHSCORE_FILE);
     if (file.is_open()) {
         file >> highScore;
     }
 }
 
 void Game::saveHighScore() {
-    std::ofstream file("highscore.txt");
+    std::ofstream file(Constants::HIGHSCORE_FILE);
     if (file.is_open()) {
         file << highScore;
     }

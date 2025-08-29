@@ -1,7 +1,6 @@
 #include "Projectile.hpp"
 #include "Constants.hpp"
 
-// Hilfsfunktion, um die initiale TextureID basierend auf dem Typ zu ermitteln
 namespace {
     TextureID getInitialTextureId(Projectile::Type type) {
         return (type == Projectile::Type::Player) ? TextureID::PlayerMissile1 : TextureID::AlienMissile1;
@@ -15,21 +14,17 @@ Projectile::Projectile(Type type, const TextureManager* textures, sf::Vector2f p
       speed(Constants::PROJECTILE_SPEED),
       projectileType(type),
       currentFrame(0),
-      animationInterval(sf::seconds(0.1f)) {
+      animationInterval(sf::seconds(Constants::PROJECTILE_ANIMATION_INTERVAL)) {
 
-    // Animation-Frames festlegen
     if (projectileType == Type::Player) {
         animationFrames = {TextureID::PlayerMissile1, TextureID::PlayerMissile2, TextureID::PlayerMissile3, TextureID::PlayerMissile4};
     } else {
         animationFrames = {TextureID::AlienMissile1, TextureID::AlienMissile2, TextureID::AlienMissile3, TextureID::AlienMissile4};
     }
 
-    // Restliche Sprite-Konfiguration
     sprite.setOrigin({sprite.getLocalBounds().size.x / 2.f, sprite.getLocalBounds().size.y / 2.f});
     sprite.setPosition(position);
-
-    //Skalierung auf doppelte Größe
-    sprite.setScale({2.0f, 2.0f});
+    sprite.setScale({Constants::PROJECTILE_SCALE, Constants::PROJECTILE_SCALE});
 }
 
 void Projectile::update(float deltaTime) {

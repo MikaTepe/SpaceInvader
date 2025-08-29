@@ -3,16 +3,16 @@
 Player::Player(const sf::Texture& texture)
     : GameObject(texture),
       speed(Constants::PLAYER_SPEED),
-      lives(3),
+      lives(Constants::PLAYER_INITIAL_LIVES),
       invincible(false),
-      invincibilityDuration(sf::seconds(2.f)) {
+      invincibilityDuration(sf::seconds(Constants::PLAYER_INVINCIBILITY_DURATION)) {
     sprite.setTexture(texture);
-    sprite.setScale({2.f, 2.f});
+    sprite.setScale({Constants::PLAYER_SCALE, Constants::PLAYER_SCALE});
 
     sf::FloatRect bounds = sprite.getLocalBounds();
     sprite.setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
 
-    sprite.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - 50.f});
+    sprite.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - Constants::PLAYER_START_Y_OFFSET});
 }
 
 void Player::update(float) {
@@ -27,17 +27,15 @@ void Player::handleHit() {
         lives--;
         invincible = true;
         invincibilityClock.restart();
-        // NEU: Färbt den Spieler grau, um den Treffer zu signalisieren.
-        sprite.setColor(sf::Color(128, 128, 128, 180)); // Grau mit leichter Transparenz
+        sprite.setColor(Constants::PLAYER_HIT_COLOR);
     }
 }
 
 void Player::respawn() {
-    sprite.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - 50.f});
+    sprite.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - Constants::PLAYER_START_Y_OFFSET});
     invincible = true;
     invincibilityClock.restart();
-    // Sorgt dafür, dass der Spieler auch nach dem Respawn kurz grau ist.
-    sprite.setColor(sf::Color(128, 128, 128, 180));
+    sprite.setColor(Constants::PLAYER_HIT_COLOR);
 }
 
 void Player::moveLeft(float deltaTime) {

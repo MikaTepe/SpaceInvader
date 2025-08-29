@@ -5,6 +5,7 @@ set(ModelSources
         ${CMAKE_CURRENT_SOURCE_DIR}/model/Projectile.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/model/PowerUp.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/model/Shelter.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/model/Constants.cpp
 )
 
 # Controller
