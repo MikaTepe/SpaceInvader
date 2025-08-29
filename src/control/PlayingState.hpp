@@ -10,6 +10,7 @@
 #include <vector>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include <random>
 
 class Game;
 
@@ -22,8 +23,14 @@ public:
     void draw(sf::RenderWindow& window) override;
 
 private:
-    void handlePlayerInput(sf::Keyboard::Key key, bool isPressed);
+    void handleInput(float deltaTime);
+    void updateAliens(float deltaTime);
+    void updateProjectiles(float deltaTime);
+    void updateExplosions(float deltaTime);
+
     void checkCollisions();
+    bool checkProjectileShelterCollision(Projectile& projectile);
+
     void alienShoot();
     void setupNewWave();
     void setupShelters();
@@ -53,6 +60,9 @@ private:
 
     sf::Text scoreText;
     std::vector<sf::RectangleShape> lifeBlocks;
+
+    std::mt19937 randomEngine;
+    std::uniform_int_distribution<size_t> alienDistribution;
 };
 
 #endif //PLAYINGSTATE_HPP

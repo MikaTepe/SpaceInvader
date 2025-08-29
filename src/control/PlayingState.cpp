@@ -3,22 +3,22 @@
 #include "../model/Constants.hpp"
 #include "../view/TextureManager.hpp"
 #include <SFML/Window/Keyboard.hpp>
-#include <random>
 #include <string>
+#include <algorithm>
 
 PlayingState::PlayingState(Game& game)
     : gameRef(game),
       player(game.getTextureManager().get(TextureID::Player)),
-      alienDirection(1.0f),
+      alienDirection(Constants::ALIEN_DIRECTION_RIGHT),
       score(0),
       waveNumber(0),
       playerShootCooldown(sf::seconds(Constants::PLAYER_SHOOT_COOLDOWN)),
       alienShootInterval(sf::seconds(Constants::ALIEN_SHOOT_INTERVAL)),
       animationInterval(sf::seconds(Constants::ALIEN_ANIMATION_INTERVAL)),
       isFirstFrame(true),
-      scoreText(game.getFont(), "Score: 0", Constants::HUD_FONT_SIZE)
+      scoreText(game.getFont(), "Score: 0", Constants::HUD_FONT_SIZE),
+      randomEngine(std::random_device{}())
 {
-    srand(time(NULL));
     scoreText.setFillColor(sf::Color::White);
     scoreText.setPosition({Constants::WINDOW_WIDTH / 2.f - scoreText.getLocalBounds().size.x / 2.f, Constants::SCORE_TEXT_Y});
     for (int i = 0; i < Constants::PLAYER_INITIAL_LIVES; ++i) {
@@ -62,35 +62,47 @@ void PlayingState::handleEvents(Game& game) {
     }
 }
 
-
 void PlayingState::update(float deltaTime) {
     if (player.getLives() <= 0) {
         gameRef.changeStateToGameOver(score);
         return;
     }
 
+    handleInput(deltaTime);
     player.update(deltaTime);
 
-    if (!player.isInvincible()) {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
-            player.moveLeft(deltaTime);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-            player.moveRight(deltaTime);
-        }
+    updateAliens(deltaTime);
+    updateProjectiles(deltaTime);
+    updateExplosions(deltaTime);
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
-            if (playerShootClock.getElapsedTime() >= playerShootCooldown) {
-                sf::Vector2f projectilePosition = {
-                    player.getPosition().x,
-                    player.getBounds().position.y
-                };
-                playerProjectiles.emplace_back(Projectile::Type::Player, &gameRef.getTextureManager(), projectilePosition, sf::Vector2f(0, -1));
-                playerShootClock.restart();
-            }
-        }
+    checkCollisions();
+    updateHUD();
+}
+
+// Logik für Spielereingaben
+void PlayingState::handleInput(float deltaTime) {
+    if (player.isInvincible()) return;
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+        player.moveLeft(deltaTime);
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+        player.moveRight(deltaTime);
     }
 
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
+        if (playerShootClock.getElapsedTime() >= playerShootCooldown) {
+            sf::Vector2f projectilePosition = {
+                player.getPosition().x,
+                player.getBounds().position.y
+            };
+            playerProjectiles.emplace_back(Projectile::Type::Player, &gameRef.getTextureManager(), projectilePosition, sf::Vector2f(0, -1));
+            playerShootClock.restart();
+        }
+    }
+}
+
+void PlayingState::updateAliens(float deltaTime) {
     bool allAliensDefeated = true;
     bool changeDirection = false;
     for (auto& alien : aliens) {
@@ -111,7 +123,10 @@ void PlayingState::update(float deltaTime) {
         }
     }
 
-    if (allAliensDefeated) setupNewWave();
+    if (allAliensDefeated) {
+        setupNewWave();
+    }
+
     if (changeDirection) {
         alienDirection *= -1.0f;
         for (auto& alien : aliens) {
@@ -121,26 +136,37 @@ void PlayingState::update(float deltaTime) {
 
     updateAlienAnimation();
     alienShoot();
+}
 
+void PlayingState::updateProjectiles(float deltaTime) {
     for (auto it = playerProjectiles.begin(); it != playerProjectiles.end(); ) {
         it->update(deltaTime);
-        if (it->getSprite().getPosition().y < 0) it = playerProjectiles.erase(it); else ++it;
+        if (it->getSprite().getPosition().y < 0) {
+            it = playerProjectiles.erase(it);
+        } else {
+            ++it;
+        }
     }
     for (auto it = alienProjectiles.begin(); it != alienProjectiles.end(); ) {
         it->update(deltaTime);
-        if (it->getSprite().getPosition().y > Constants::WINDOW_HEIGHT) it = alienProjectiles.erase(it); else ++it;
+        if (it->getSprite().getPosition().y > Constants::WINDOW_HEIGHT) {
+            it = alienProjectiles.erase(it);
+        } else {
+            ++it;
+        }
     }
+}
 
+// NEU: Logik zur Aktualisierung der Explosionen
+void PlayingState::updateExplosions(float deltaTime) {
     explosions.erase(std::remove_if(explosions.begin(), explosions.end(),
         [](const Explosion& e) { return e.isFinished(); }), explosions.end());
 
     for(auto& explosion : explosions) {
         explosion.update(deltaTime);
     }
-
-    checkCollisions();
-    updateHUD();
 }
+
 
 void PlayingState::updateAlienAnimation() {
     if (animationClock.getElapsedTime() >= animationInterval) {
@@ -173,21 +199,43 @@ void PlayingState::alienShoot() {
     if (alienProjectiles.empty() && alienShootClock.getElapsedTime() >= alienShootInterval) {
         std::vector<int> activeAlienIndices;
         for (size_t i = 0; i < aliens.size(); ++i) {
-            if (aliens[i].isActive) activeAlienIndices.push_back(i);
+            if (aliens[i].isActive) {
+                activeAlienIndices.push_back(i);
+            }
         }
         if (!activeAlienIndices.empty()) {
-            int randomIndex = activeAlienIndices[rand() % activeAlienIndices.size()];
+            // Moderne Zufallszahlengenerierung
+            alienDistribution.param(std::uniform_int_distribution<size_t>::param_type(0, activeAlienIndices.size() - 1));
+            int randomIndex = activeAlienIndices[alienDistribution(randomEngine)];
             alienProjectiles.emplace_back(Projectile::Type::Alien, &gameRef.getTextureManager(), aliens[randomIndex].getPosition(), sf::Vector2f(0, 1));
             alienShootClock.restart();
         }
     }
 }
 
+bool PlayingState::checkProjectileShelterCollision(Projectile& projectile) {
+    for (auto& shelter : shelters) {
+        if (!shelter.isDestroyed() && projectile.getBounds().findIntersection(shelter.getBounds())) {
+            shelter.takeDamage();
+            return true;
+        }
+    }
+    return false;
+}
+
 void PlayingState::checkCollisions() {
+    // Kollision von Spieler-Projektilen
     playerProjectiles.erase(std::remove_if(playerProjectiles.begin(), playerProjectiles.end(),
         [this](Projectile& projectile) {
+            if (!projectile.isActive) return false;
+
+            if (checkProjectileShelterCollision(projectile)) {
+                projectile.isActive = false;
+                return true;
+            }
+
             for (auto& alien : aliens) {
-                if (projectile.isActive && alien.isActive && projectile.getBounds().findIntersection(alien.getBounds())) {
+                if (alien.isActive && projectile.getBounds().findIntersection(alien.getBounds())) {
                     projectile.isActive = false;
                     alien.isActive = false;
                     score += alien.scoreValue;
@@ -195,34 +243,29 @@ void PlayingState::checkCollisions() {
                     return true;
                 }
             }
-            for (auto& shelter : shelters) {
-                if (projectile.isActive && !shelter.isDestroyed() && projectile.getBounds().findIntersection(shelter.getBounds())) {
-                    projectile.isActive = false;
-                    shelter.takeDamage();
-                    return true;
-                }
-            }
             return false;
         }), playerProjectiles.end());
 
+    // Kollision von Alien-Projektilen
     alienProjectiles.erase(std::remove_if(alienProjectiles.begin(), alienProjectiles.end(),
         [this](Projectile& projectile) {
-            if (projectile.isActive && !player.isInvincible() && projectile.getBounds().findIntersection(player.getBounds())) {
+            if (!projectile.isActive) return false;
+
+            if (checkProjectileShelterCollision(projectile)) {
+                projectile.isActive = false;
+                return true;
+            }
+
+            if (!player.isInvincible() && projectile.getBounds().findIntersection(player.getBounds())) {
                 player.handleHit();
                 explosions.emplace_back(gameRef.getTextureManager().get(TextureID::PlayerExplosion), player.getPosition(), Constants::PLAYER_EXPLOSION_SCALE);
                 if (player.getLives() > 0) player.respawn();
                 return true;
             }
-            for (auto& shelter : shelters) {
-                if (projectile.isActive && !shelter.isDestroyed() && projectile.getBounds().findIntersection(shelter.getBounds())) {
-                    projectile.isActive = false;
-                    shelter.takeDamage();
-                    return true;
-                }
-            }
             return false;
         }), alienProjectiles.end());
 }
+
 
 void PlayingState::draw(sf::RenderWindow& window) {
     if (player.getLives() > 0) {

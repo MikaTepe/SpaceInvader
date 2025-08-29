@@ -15,12 +15,7 @@ Game::Game() :
     lastScore(0)
 {
     window.setFramerateLimit(Constants::FRAME_RATE_LIMIT);
-
-    if (!font->openFromFile(Constants::FONT_PATH)) {
-        std::cerr << "Error loading font" << std::endl;
-        window.close();
-        return;
-    }
+    font->openFromFile(Constants::FONT_PATH);
 
     loadHighScore();
     currentState = std::make_unique<StartScreenState>(*this);
