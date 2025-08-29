@@ -20,7 +20,17 @@ enum class TextureID {
     AlienMissile1,
     AlienMissile2,
     AlienMissile3,
-    AlienMissile4
+    AlienMissile4,
+    ShelterFull,
+    ShelterDamaged1,
+    ShelterDamaged2,
+    ShelterDamaged3,
+    ShelterDamaged4,
+    ShelterDamaged5,
+    ShelterDamaged6,
+    ShelterDamaged7,
+    ShelterDamaged8,
+    ShelterDamaged9
 };
 
 class TextureManager {

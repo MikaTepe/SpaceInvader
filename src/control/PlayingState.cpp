@@ -28,6 +28,7 @@ PlayingState::PlayingState(Game& game)
         lifeBlocks.push_back(block);
     }
     setupNewWave();
+    setupShelters();
 }
 
 void PlayingState::setupNewWave() {
@@ -41,6 +42,17 @@ void PlayingState::setupNewWave() {
             aliens.emplace_back(gameRef.getTextureManager().get(initialTexture), 100.0f + j * 60.0f, 50.0f + i * 40.0f, points);
         }
     }
+}
+
+void PlayingState::setupShelters() {
+    shelters.clear();
+    // KORREKTUR: Platziert die Shelter symmetrisch über den Bildschirm.
+    float y_position = 450.f; // Die Y-Position bleibt gleich.
+    float quarter_width = Constants::WINDOW_WIDTH / 4.f;
+
+    shelters.emplace_back(gameRef.getTextureManager(), quarter_width * 1, y_position);      // Bei 25% der Bildschirmbreite
+    shelters.emplace_back(gameRef.getTextureManager(), quarter_width * 2, y_position);      // Bei 50% (Mitte)
+    shelters.emplace_back(gameRef.getTextureManager(), quarter_width * 3, y_position);      // Bei 75%
 }
 
 void PlayingState::handleEvents(Game& game) {
@@ -116,6 +128,10 @@ void PlayingState::update(float deltaTime) {
     explosions.erase(std::remove_if(explosions.begin(), explosions.end(),
         [](const Explosion& e) { return e.isFinished(); }), explosions.end());
 
+    for(auto& explosion : explosions) {
+        explosion.update(deltaTime);
+    }
+
     checkCollisions();
     updateHUD();
 }
@@ -175,6 +191,13 @@ void PlayingState::checkCollisions() {
                     return true;
                 }
             }
+            for (auto& shelter : shelters) {
+                if (projectile.isActive && !shelter.isDestroyed() && projectile.getBounds().findIntersection(shelter.getBounds())) {
+                    projectile.isActive = false;
+                    shelter.takeDamage();
+                    return true;
+                }
+            }
             return false;
         }), playerProjectiles.end());
 
@@ -183,9 +206,16 @@ void PlayingState::checkCollisions() {
             if (projectile.isActive && !player.isInvincible() && projectile.getBounds().findIntersection(player.getBounds())) {
                 player.handleHit();
                 soundManager.play(SoundEffect::PlayerKilled);
-                explosions.emplace_back(gameRef.getTextureManager().get(TextureID::PlayerExplosion), player.getPosition());
+                explosions.emplace_back(gameRef.getTextureManager().get(TextureID::PlayerExplosion), player.getPosition(), 3.0f);
                 if (player.getLives() > 0) player.respawn();
                 return true;
+            }
+            for (auto& shelter : shelters) {
+                if (projectile.isActive && !shelter.isDestroyed() && projectile.getBounds().findIntersection(shelter.getBounds())) {
+                    projectile.isActive = false;
+                    shelter.takeDamage();
+                    return true;
+                }
             }
             return false;
         }), alienProjectiles.end());
@@ -206,6 +236,9 @@ void PlayingState::draw(sf::RenderWindow& window) {
     }
     for (auto& explosion : explosions) {
         explosion.draw(window);
+    }
+    for (auto& shelter : shelters) {
+        shelter.draw(window);
     }
     window.draw(scoreText);
     for(const auto& block : lifeBlocks) {

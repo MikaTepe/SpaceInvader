@@ -5,6 +5,7 @@
 #include "SoundManager.hpp"
 #include "../view/Explosion.hpp"
 #include "../model/Player.hpp"
+#include "../model/Shelter.hpp"
 #include "../model/Alien.hpp"
 #include "../model/Projectile.hpp"
 #include <vector>
@@ -26,6 +27,7 @@ private:
     void checkCollisions();
     void alienShoot();
     void setupNewWave();
+    void setupShelters();
     void updateHUD();
     void updateAlienAnimation();
 
@@ -35,6 +37,7 @@ private:
     std::vector<Projectile> playerProjectiles;
     std::vector<Projectile> alienProjectiles;
     std::vector<Explosion> explosions;
+    std::vector<Shelter> shelters;
 
     float alienDirection;
     float currentAlienSpeed;

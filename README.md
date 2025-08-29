@@ -8,7 +8,5 @@ Bauen und ausführen im JupyterHub:
 
 Features und Bugs
 
-- Texturen aktuell etwas sehr klein, einige Texturen vergrößert (Player Explosion, Player und Projektile)
-- Vielleicht PowerUp, da Vorgabe
-- Schilder implementieren
+- Vielleicht PowerUp (?)
 - Refactoren und Kommentare!!!

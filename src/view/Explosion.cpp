@@ -1,18 +1,27 @@
 #include "Explosion.hpp"
 
-Explosion::Explosion(const sf::Texture& texture, sf::Vector2f position)
-    : sprite(texture), duration(sf::seconds(0.5f))
+Explosion::Explosion(const sf::Texture& texture, sf::Vector2f position, float scale)
+    : sprite(texture), finished(false) // Initialisiere 'sprite' hier
 {
-    sf::FloatRect bounds = sprite.getLocalBounds();
-    sprite.setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
+    // Die restliche Konfiguration erfolgt nach der Erstellung.
+    sprite.setOrigin({sprite.getLocalBounds().size.x / 2.f, sprite.getLocalBounds().size.y / 2.f});
     sprite.setPosition(position);
-    lifetimeClock.restart();
+    sprite.setScale({scale, scale});
 }
 
-bool Explosion::isFinished() const {
-    return lifetimeClock.getElapsedTime() >= duration;
+void Explosion::update(float deltaTime) {
+
+    if (clock.getElapsedTime().asSeconds() > 0.5f) { // Beispielzeit
+        finished = true;
+    }
 }
 
 void Explosion::draw(sf::RenderWindow& window) {
-    window.draw(sprite);
+    if (!finished) {
+        window.draw(sprite);
+    }
+}
+
+bool Explosion::isFinished() const {
+    return finished;
 }
