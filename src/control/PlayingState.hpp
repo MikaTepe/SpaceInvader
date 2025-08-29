@@ -2,7 +2,6 @@
 #define PLAYINGSTATE_HPP
 
 #include "GameState.hpp"
-#include "SoundManager.hpp"
 #include "../view/Explosion.hpp"
 #include "../model/Player.hpp"
 #include "../model/Shelter.hpp"
@@ -54,7 +53,6 @@ private:
 
     sf::Text scoreText;
     std::vector<sf::RectangleShape> lifeBlocks;
-    SoundManager soundManager;
 };
 
 #endif //PLAYINGSTATE_HPP

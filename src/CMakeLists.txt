@@ -13,7 +13,6 @@ set(ControlSources
         ${CMAKE_CURRENT_SOURCE_DIR}/control/StartScreenState.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/control/PlayingState.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/control/GameOverState.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/control/SoundManager.cpp
 )
 
 # View

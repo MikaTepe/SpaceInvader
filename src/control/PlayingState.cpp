@@ -80,7 +80,6 @@ void PlayingState::update(float deltaTime) {
                 };
                 playerProjectiles.emplace_back(Projectile::Type::Player, &gameRef.getTextureManager(), projectilePosition, sf::Vector2f(0, -1));
                 playerShootClock.restart();
-                soundManager.play(SoundEffect::PlayerShoot);
             }
         }
     }
@@ -173,7 +172,6 @@ void PlayingState::alienShoot() {
             int randomIndex = activeAlienIndices[rand() % activeAlienIndices.size()];
             alienProjectiles.emplace_back(Projectile::Type::Alien, &gameRef.getTextureManager(), aliens[randomIndex].getPosition(), sf::Vector2f(0, 1));
             alienShootClock.restart();
-            soundManager.play(SoundEffect::InvaderShoot);
         }
     }
 }
@@ -186,7 +184,6 @@ void PlayingState::checkCollisions() {
                     projectile.isActive = false;
                     alien.isActive = false;
                     score += alien.scoreValue;
-                    soundManager.play(SoundEffect::InvaderKilled);
                     explosions.emplace_back(gameRef.getTextureManager().get(TextureID::InvaderExplosion), alien.getPosition());
                     return true;
                 }
@@ -205,7 +202,6 @@ void PlayingState::checkCollisions() {
         [this](Projectile& projectile) {
             if (projectile.isActive && !player.isInvincible() && projectile.getBounds().findIntersection(player.getBounds())) {
                 player.handleHit();
-                soundManager.play(SoundEffect::PlayerKilled);
                 explosions.emplace_back(gameRef.getTextureManager().get(TextureID::PlayerExplosion), player.getPosition(), 3.0f);
                 if (player.getLives() > 0) player.respawn();
                 return true;
