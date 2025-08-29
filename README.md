@@ -9,4 +9,4 @@ Bauen und ausführen im JupyterHub:
 Features und Bugs
 
 - Vielleicht PowerUp (?)
-- Refactoren und Kommentare!!!
+- Kommentare!!!
