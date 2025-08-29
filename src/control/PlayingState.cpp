@@ -69,14 +69,26 @@ void PlayingState::update(float deltaTime) {
         gameRef.changeStateToGameOver(score);
         return;
     }
+
+    // Zuerst den Spieler-Zustand aktualisieren. Dies prüft, ob die Unverwundbarkeit abgelaufen ist.
     player.update(deltaTime);
 
+    // Prüfen, ob der Spieler verwundbar ist. Nur dann Eingaben verarbeiten.
     if (!player.isInvincible()) {
+        // Bewegung links/rechts
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+            player.moveLeft(deltaTime);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+            player.moveRight(deltaTime);
+        }
+
+        // Schießen
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
             if (playerShootClock.getElapsedTime() >= playerShootCooldown) {
                 sf::Vector2f projectilePosition = {
                     player.getPosition().x,
-                    player.getPosition().y - player.getBounds().size.y / 2.f
+                    player.getBounds().position.y
                 };
                 playerProjectiles.emplace_back(Projectile::Type::Player, &gameRef.getTextureManager(), projectilePosition, sf::Vector2f(0, -1));
                 playerShootClock.restart();
@@ -158,7 +170,7 @@ void PlayingState::updateHUD() {
     scoreText.setOrigin({scoreText.getLocalBounds().size.x / 2.f, 0});
     scoreText.setPosition({Constants::WINDOW_WIDTH / 2.f, 10.f});
     for(size_t i = 0; i < lifeBlocks.size(); ++i) {
-        lifeBlocks[i].setFillColor(i < player.getLives() ? sf::Color::Red : sf::Color(100, 100, 100));
+        lifeBlocks[i].setFillColor(i < static_cast<size_t>(player.getLives()) ? sf::Color::Red : sf::Color(100, 100, 100));
     }
 }
 

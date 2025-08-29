@@ -1,31 +1,22 @@
 #include "Player.hpp"
-#include "Constants.hpp"
-#include <SFML/Window/Keyboard.hpp>
 
 Player::Player(const sf::Texture& texture)
-    : GameObject(texture), speed(Constants::PLAYER_SPEED), lives(3), invincible(false) {
-    sprite.setOrigin({sprite.getLocalBounds().size.x / 2.f, sprite.getLocalBounds().size.y / 2.f});
+    : GameObject(texture),
+      speed(Constants::PLAYER_SPEED),
+      lives(3),
+      invincible(false),
+      invincibilityDuration(sf::seconds(2.f)) {
+    sprite.setTexture(texture);
+    sprite.setScale({2.f, 2.f});
+
+    sf::FloatRect bounds = sprite.getLocalBounds();
+    sprite.setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
+
     sprite.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - 50.f});
-    sprite.setScale({2.0f, 2.0f});
 }
 
-void Player::update(float deltaTime) {
-    if (!invincible) {
-        sf::Vector2f position = sprite.getPosition();
-
-        // Bewegung nach links
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && position.x > sprite.getGlobalBounds().size.x / 2.f) {
-            position.x -= speed * deltaTime;
-        }
-        // Bewegung nach rechts
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) && position.x < Constants::WINDOW_WIDTH - sprite.getGlobalBounds().size.x / 2.f) {
-            position.x += speed * deltaTime;
-        }
-        sprite.setPosition(position);
-    }
-
-    // Unverwundbarkeits-Timer
-    if (invincible && invincibilityClock.getElapsedTime().asSeconds() > 2.f) {
+void Player::update(float) {
+    if (invincible && invincibilityClock.getElapsedTime() >= invincibilityDuration) {
         invincible = false;
         sprite.setColor(sf::Color::White);
     }
@@ -36,7 +27,8 @@ void Player::handleHit() {
         lives--;
         invincible = true;
         invincibilityClock.restart();
-        sprite.setColor(sf::Color(255, 255, 255, 128)); // Macht den Spieler halb-transparent
+        // NEU: Färbt den Spieler grau, um den Treffer zu signalisieren.
+        sprite.setColor(sf::Color(128, 128, 128, 180)); // Grau mit leichter Transparenz
     }
 }
 
@@ -44,13 +36,26 @@ void Player::respawn() {
     sprite.setPosition({Constants::WINDOW_WIDTH / 2.f, Constants::WINDOW_HEIGHT - 50.f});
     invincible = true;
     invincibilityClock.restart();
-    sprite.setColor(sf::Color(255, 255, 255, 128));
+    // Sorgt dafür, dass der Spieler auch nach dem Respawn kurz grau ist.
+    sprite.setColor(sf::Color(128, 128, 128, 180));
 }
 
-int Player::getLives() const {
-    return lives;
+void Player::moveLeft(float deltaTime) {
+    if (sprite.getPosition().x > getBounds().size.x / 2.f) {
+        sprite.move({-speed * deltaTime, 0});
+    }
+}
+
+void Player::moveRight(float deltaTime) {
+    if (sprite.getPosition().x < Constants::WINDOW_WIDTH - getBounds().size.x / 2.f) {
+        sprite.move({speed * deltaTime, 0});
+    }
 }
 
 bool Player::isInvincible() const {
     return invincible;
+}
+
+int Player::getLives() const {
+    return lives;
 }
