@@ -1,5 +1,6 @@
 #include "PowerUp.hpp"
 
+// Aktuell kein PowerUp implementiert, Klasse dennoch erstellt für einfache implementierung
 PowerUp::PowerUp(const sf::Texture& texture, float startX, float startY)
     : GameObject(texture)
 {
